@@ -1,22 +1,27 @@
 # WindWise UK — Wind Generation Forecast Analysis
 
-WindWise UK is a full-stack dashboard for analyzing UK wind generation forecasts against actual generation data. It helps users understand forecast error, forecast bias, and data coverage for January 2026.
+**Live dashboard:** https://windwise-uk.vercel.app  
+**Backend API:** https://windwise-uk-1.onrender.com  
+**GitHub repository:** https://github.com/sumsinh/windwise-uk
+
+## Overview
+
+WindWise UK is a full-stack dashboard for comparing UK wind generation forecasts with actual generation during January 2026. It presents forecast accuracy metrics, visual comparisons, delivery-period records, and data-coverage diagnostics.
 
 ## Features
 
-- Interactive dashboard built with React and Tailwind CSS
+- Interactive dashboard with KPI cards
 - Daily forecast-versus-actual generation chart
-- Mean Absolute Error (MAE), Root Mean Square Error (RMSE), and forecast bias metrics
+- Mean Absolute Error (MAE), Root Mean Square Error (RMSE), and forecast bias
 - Forecast coverage diagnostics
 - Searchable and filterable delivery-period table
 - CSV export of displayed records
-- Django REST API integration with Elexon BMRS data
+- Django REST API backed by Elexon BMRS data
 
 ## Technology Stack
 
 **Frontend**
-- React
-- Vite
+- React and Vite
 - Tailwind CSS
 - Recharts
 - Lucide React
@@ -29,62 +34,65 @@ WindWise UK is a full-stack dashboard for analyzing UK wind generation forecasts
 
 **Data source**
 - Elexon BMRS API
-- `FUELHH` for actual wind generation
-- `WINDFOR` for wind generation forecasts
+- `FUELHH` — actual wind generation
+- `WINDFOR` — wind generation forecasts
 
-## Analysis Period
+## Live Services
 
-January 1–31, 2026.
+| Service | URL |
+|---|---|
+| Frontend dashboard | https://windwise-uk.vercel.app |
+| Backend health check | https://windwise-uk-1.onrender.com/api/health/ |
+| Forecast accuracy API | https://windwise-uk-1.onrender.com/api/accuracy/ |
 
-The backend retrieves actual wind generation and forecast records, selects eligible forecasts using a configured day-ahead publication cutoff, matches forecasts to actuals by delivery timestamp, and calculates accuracy metrics.
+## Analysis Period and Methodology
 
-### Metrics
+The analysis covers January 1–31, 2026.
+
+The backend retrieves actual wind generation and forecast records, applies a configured day-ahead publication cutoff, matches eligible forecasts to actual generation by delivery timestamp, and calculates accuracy metrics.
 
 - **MAE:** Average absolute difference between forecast and actual generation.
 - **RMSE:** Square root of the average squared forecast error.
 - **Bias:** Average signed error, calculated as forecast minus actual. Positive bias indicates overforecasting.
 - **Coverage:** Percentage of actual delivery timestamps with a matching eligible forecast.
 
-### Data limitation
+### Data limitations
 
-The current retrieved WINDFOR records have hourly target timestamps, whereas the FUELHH actual-generation records are half-hourly. The current implementation matches exact timestamps and does not interpolate or fabricate missing forecast values.
+The retrieved `WINDFOR` records have hourly target timestamps, whereas the `FUELHH` actual-generation records are half-hourly. The implementation matches exact timestamps and does not interpolate or fabricate missing forecasts.
 
-As a result, the current analysis covers only the matched periods. The observed 50% coverage is a limitation of the retrieved forecast timestamps and should not be presented as full half-hourly coverage.
+The current analysis therefore covers matched periods, with observed coverage of approximately 50%. Results should not be interpreted as full half-hourly coverage.
 
-The day-ahead cutoff is currently configured as 10:00 UK time on the day before delivery. This is an explicit modelling assumption and should be checked against the assignment's purchasing-decision requirement.
+The day-ahead cutoff is configured as 10:00 UK time on the day before delivery. This is a modelling assumption that should be checked against the assignment's purchasing-decision requirements.
 
-## Local Setup
+## Run Locally
 
 ### Prerequisites
 
-- Python 3.12 or another compatible Python version
+- Python 3.12 or a compatible version
 - Node.js and npm
 - Git
 
 ### 1. Clone the repository
 
 ```bash
-git clone YOUR_PUBLIC_GITHUB_REPOSITORY_URL
+git clone https://github.com/sumsinh/windwise-uk.git
 cd windwise-uk
 ```
 
 ### 2. Start the backend
 
+In PowerShell:
+
 ```powershell
 cd backend
 py -m venv venv
 .\venv\Scripts\Activate.ps1
-pip install django djangorestframework django-cors-headers requests pandas numpy gunicorn
+pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
 ```
 
 The backend runs at `http://127.0.0.1:8000`.
-
-API endpoints:
-
-- `GET /api/health/`
-- `GET /api/accuracy/`
 
 ### 3. Start the frontend
 
@@ -98,24 +106,25 @@ npm run dev
 
 Open `http://localhost:5173`.
 
-### Environment configuration
+For local development, the frontend defaults to `http://127.0.0.1:8000` for the API. In production, configure `VITE_API_URL` to the deployed backend URL and allow the frontend origin in Django CORS settings.
 
-The frontend supports an optional `VITE_API_URL` variable. For local development, the default API URL is `http://127.0.0.1:8000`.
+## Deployment
 
-For production, configure `VITE_API_URL` to the deployed backend URL and configure Django CORS to allow the deployed frontend origin.
+- Frontend deployed on Vercel.
+- Backend deployed on Render.
+- Dockerfiles and Docker Compose configuration are included in the repository for container-based local development.
 
 ## AI Tool Disclosure
 
-AI assistance was used during development to help with code drafting, debugging, dashboard implementation, and documentation. All generated code and analysis should be reviewed and tested before submission.
+AI assistance was used during development for code drafting, debugging, dashboard implementation, and documentation. The implementation and analysis should be reviewed against the assignment requirements.
 
 ## Future Improvements
 
-- Verify whether an appropriate historical forecast source provides all required half-hourly target periods.
-- Confirm the purchasing-decision cutoff against the assignment specification.
+- Identify a suitable historical forecast source covering every required settlement period.
+- Verify the required forecast publication cutoff against the assignment specification.
 - Add automated tests for timestamp matching and metric calculations.
-- Add Docker configuration and deploy the frontend and backend.
-- Improve API caching and handling of upstream data-source errors.
+- Improve API caching and upstream error handling.
 
 ## Disclaimer
 
-This project is an analytical demonstration. Forecast coverage and metrics should be interpreted in light of the documented data-resolution limitations.
+This project is an analytical demonstration. Accuracy metrics must be interpreted in light of the documented data-resolution and forecast-coverage limitations.
